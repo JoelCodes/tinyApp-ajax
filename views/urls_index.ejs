@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <%- include _header.ejs %>
+  </head>
+
+  <body>
+    <a>shorten link</a>
+    <ul>
+      <% for(var key in urls) { %>
+      <li><%= key + ": " + urls[key]%></li>
+      <% } %>
+    </ul>
+  </body>
+</html>
