@@ -2,10 +2,19 @@
 
 <html lang="en">
   <head>
-    <%- include partials/_header.ejs %>
+    <% include partials/_header.ejs %>
   </head>
 
   <body>
       <p><%= shortURL + " : " + longURL %></p>
+      <form action="/urls/<%= shortURL %>" method="post">
+        <p>
+          <label for="long-url-input">LongURL</label>
+          <input id="long-url-input" name="newLongURL" value="<%= longURL %>">
+        </p>
+    <p>
+      <button>Update</button>
+    </p>
+    </form>
   </body>
 </html>
