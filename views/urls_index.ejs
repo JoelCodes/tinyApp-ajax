@@ -2,14 +2,14 @@
 
 <html lang="en">
   <head>
-    <% include partials/_header.ejs %>
   </head>
-
   <body>
+    <% include partials/_header.ejs %>
     <ul>
       <% for(var key in urls) { %>
       <li>
         <%= key + ": " + urls[key] %>
+        <a href="/urls/<%= key %>">Edit</a>
         <form action="/urls/<%= key %>/delete" method="POST">
           <button>Delete</button>
         </form>
