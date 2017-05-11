@@ -1,13 +1,13 @@
   <h1>TinyApp</h1>
 
-  <form action= "/login" method= "post">
+  <form action= "/login" method= "POST">
     <input type= "text" name= "username">
     <input type= "submit" value= "Login">
   </form>
 
   <% if(locals.username) { %>
   <%= locals.username %>
-  <form action= "/logout" method= "post">
+  <form action= "/logout" method= "POST">
     <input type = "submit" value = "Logout">
   <% } %>
   </form>

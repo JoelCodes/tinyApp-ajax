@@ -16,7 +16,7 @@ const users = {
     email: "user@example.com",
     password: "purple-monkey-dinosaur"
   },
- "user2RandomID": {
+  "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
     password: "dishwasher-funk"
@@ -60,8 +60,31 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-app.get("/urls/register", (req, res) => {
+app.get("/register", (req, res) => {
   res.render("urls_register");
+});
+
+app.post("/register", (req, res) => {
+  let randomID = generateRandomString();
+  users[randomID] = {
+    id: randomID,
+    email: req.body.email,
+    password: req.body.password
+  }
+  if (!req.body.email || !req.body.password) {
+    res.status(400);
+    res.send("Please enter both an email and a password");
+    return;
+  }
+  for (let user in users) {
+    if (users[user].email === req.body.email) {
+      res.status(400).send("Please enter another email");
+      return;
+    }
+  }
+
+  res.cookie("username", randomID);
+  res.redirect("/urls");
 });
 
 app.get("/u/:shortURL", (req, res) => {
