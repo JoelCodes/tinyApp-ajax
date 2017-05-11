@@ -2,16 +2,18 @@
 
 <html lang="en">
   <head>
+        <title>Tiny App</title>
   </head>
+
   <body>
     <% include partials/_header.ejs %>
-      <p><%= shortURL + " : " + longURL %></p>
-      <form action="/urls/<%= shortURL %>" method="post">
-        <p>
-          <label for="long-url-input">LongURL</label>
-          <input id="long-url-input" name="newLongURL" value="<%= longURL %>">
-        </p>
+    <%= shortURL + " : " + longURL%>
+    <form action="/urls/<%= shortURL %>" method="post">
       <p>
+        <label for="long-url-input">long URL</label>
+        <input id="long-url-input" name="newLongURL" value="<%= longURL %>">
+      </p>
+    <p>
       <button>Update</button>
     </p>
     </form>

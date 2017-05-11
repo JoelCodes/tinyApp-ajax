@@ -1,9 +1,9 @@
 const express = require("express");
-const app = express();
-const cookieParser = require('cookie-parser');
-
-const PORT = process.env.PORT || 8080;
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
+
+const app = express();
+const PORT = process.env.PORT || 8080;
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -13,6 +13,11 @@ const urlDatabase = {
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
+
+app.use(function(req, res, next) {
+  res.locals.username = req.cookies.username;
+  next();
+})
 
 function generateRandomString() {
   let shortURL = "";
@@ -24,6 +29,14 @@ function generateRandomString() {
   return shortURL;
 }
 
+app.get("/urls", (req, res) => {
+  let templateVars = {
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  };
+  res.render("urls_index", templateVars);
+});
+
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
@@ -31,19 +44,17 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
-  res.redirect('/urls/' + shortURL);
+  res.redirect(`/urls/${shortURL}`);
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  let short = req.params.shortURL;
+  let longURL = urlDatabase[short];
+  res.redirect(longURL);
 });
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
-});
-
-app.get("/urls", (req, res) => {
-  let templateVars = {
-    urls: urlDatabase,
-    username: req.cookies["username"]
-  };
-  res.render("urls_index", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -70,12 +81,6 @@ app.post("/login", (req, res) => {
 app.post("/logout", (req, res) => {
   res.clearCookie("username");
   res.redirect("/urls");
-});
-
-app.get("/u/:shortURL", (req, res) => {
-  let short = req.params.shortURL;
-  let longURL = urlDatabase[short];
-  res.redirect(longURL);
 });
 
 app.listen(PORT, () => {

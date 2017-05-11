@@ -1,21 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
+  <h1>TinyApp</h1>
 
-<html>
-  <head>
-    <title>TinyApp</title>
-  </head>
+  <form action= "/login" method= "post">
+    <input type= "text" name= "username">
+    <input type= "submit" value= "Submit">
+  </form>
 
-  <body>
-    <h1>TinyApp</h1>
-      <form action="/login" method="post">
-          <input type="text" name="username">
-          <input type="submit" value="Submit">
-      </form>
-      <% if(username) { %>
-      <%= username %>
-        <form action="/logout" method="post">
-        <input type = "submit" value = "logout">
-      <% } %>
-  </body>
-</html>
+  <% if(locals.username) { %>
+  <%= locals.username %>
+  <form action= "/logout" method= "post">
+    <input type = "submit" value = "logout">
+  <% } %>
+  </form>

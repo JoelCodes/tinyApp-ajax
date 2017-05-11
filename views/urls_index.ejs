@@ -2,6 +2,7 @@
 
 <html lang="en">
   <head>
+    <title>Tiny App</title>
   </head>
   <body>
     <% include partials/_header.ejs %>
@@ -9,8 +10,8 @@
       <% for(var key in urls) { %>
       <li>
         <%= key + ": " + urls[key] %>
-        <a href="/urls/<%= key %>">Edit</a>
         <form action="/urls/<%= key %>/delete" method="POST">
+        <a href="/urls/<%= key %>">Edit</a>
           <button>Delete</button>
         </form>
       </li>
