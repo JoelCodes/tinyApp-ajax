@@ -28,7 +28,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
 app.use(function(req, res, next) {
-  res.locals.username = req.cookies.username;
+  res.locals.user = users[req.cookies.user_id];
   next();
 })
 
@@ -57,6 +57,10 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
+
 app.get("/urls/:id", (req, res) => {
   let shortURL = req.params.id;
   let templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id] };
@@ -71,10 +75,6 @@ app.post("/urls/:id", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
-});
-
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
 });
 
 app.get("/register", (req, res) => {
@@ -104,9 +104,29 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
+app.get("/login", (req, res) => {
+  res.render("login");
+});
+
 app.post("/login", (req, res) => {
-  res.cookie("user_id", req.body.username);
-  res.redirect("/urls");
+
+  if (!req.body.email || !req.body.password) {
+    res.status(400).send("Please enter both an email and a password");
+    return;
+  }
+  for (let user in users) {
+    if (users[user].email === req.body.email) {
+      if (users[user].password === req.body.password) {
+        res.cookie("user_id", users[user].id);
+        res.redirect("/urls");
+        return;
+      } else {
+        res.status(403).send("Incorrect password");
+        return;
+      }
+    }
+  }
+  res.status(403).send("Email does not exist");
 });
 
 app.post("/logout", (req, res) => {
