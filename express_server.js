@@ -12,7 +12,7 @@ app.use(cookieSession({
   name: 'session',
   keys: [process.env.SESSION_SECRET || "development"],
   maxAge: 24 * 60 * 60 * 1000
-}))
+}));
 
 const urlDatabase = {
   "b2xVn2": {
@@ -47,7 +47,7 @@ const users = {
 app.use(function(req, res, next) {
   res.locals.user = users[req.session.user_id];
   next();
-})
+});
 
 function generateRandomString() {
   let shortURL = "";
@@ -76,7 +76,7 @@ app.get("/urls", (req, res) => {
   let templateVars = {
     urls: urls,
     user: users[userid]
-  }
+  };
   res.render("urls_index", templateVars);
 });
 
@@ -132,8 +132,8 @@ app.post("/register", (req, res) => {
     id: randomID,
     email: req.body.email,
     password: bcrypt.hashSync(req.body.password, 10)
-  }
-    req.session["user_id"] = randomID;
+  };
+  req.session["user_id"] = randomID;
   res.redirect("/urls");
 });
 

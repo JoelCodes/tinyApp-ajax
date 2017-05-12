@@ -1,7 +1,8 @@
 <header>
   <h1>TinyApp</h1>
+  <h3>A site for shortening long URLs...</h3>
 
-<% if(user) { %>
+  <% if(user) { %>
 
   <%= user.email %>
 
@@ -9,12 +10,10 @@
   <input type="submit" value="Logout">
   </form>
 
-
-
-<% } else { %>
+  <% } else { %>
 
   <a href="/register">Register</a>
   <a href="/login">Login</a>
 
-<% } %>
+  <% } %>
 </header>
