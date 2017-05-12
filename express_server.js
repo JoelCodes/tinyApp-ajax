@@ -1,14 +1,18 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
-const bcrypt = require('bcrypt');
+const cookieSession = require("cookie-session");
+const bcrypt = require("bcrypt");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: [process.env.SESSION_SECRET || "development"],
+  maxAge: 24 * 60 * 60 * 1000
+}))
 
 const urlDatabase = {
   "b2xVn2": {
@@ -41,7 +45,7 @@ const users = {
 
 
 app.use(function(req, res, next) {
-  res.locals.user = users[req.cookies.user_id];
+  res.locals.user = users[req.session.user_id];
   next();
 })
 
@@ -67,7 +71,7 @@ function userSpecificURL(user_id) {
 }
 
 app.get("/urls", (req, res) => {
-  let userid = req.cookies["user_id"];
+  let userid = req.session["user_id"];
   let urls = userSpecificURL(userid);
   let templateVars = {
     urls: urls,
@@ -78,13 +82,12 @@ app.get("/urls", (req, res) => {
 
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = {longURL: req.body.longURL, user_id: req.cookies["user_id"]};
-  // urlDatabase[shortURL] = req.body.longURL;
+  urlDatabase[shortURL] = {longURL: req.body.longURL, user_id: req.session["user_id"]};
   res.redirect(`/urls/${shortURL}`);
 });
 
 app.get("/urls/new", (req, res) => {
-  let user_id = req.cookies["user_id"];
+  let user_id = req.session["user_id"];
   if (users[user_id]) {
     res.render("urls_new");
   } else {
@@ -120,8 +123,7 @@ app.post("/register", (req, res) => {
   }
   for (let user in users) {
     if (users[user].email === req.body.email) {
-      res.status(400).send("That email is already registered")
-      // , please"<a href="/login">login</a>" or try registering "<a href="/register">again</a>" );
+      res.status(400).send("That email is already registered, please <a href='/login'>login</a> or try registering <a href='/register'>again</a>" );
       return;
     }
   }
@@ -131,7 +133,7 @@ app.post("/register", (req, res) => {
     email: req.body.email,
     password: bcrypt.hashSync(req.body.password, 10)
   }
-    res.cookie("user_id", randomID);
+    req.session["user_id"] = randomID;
   res.redirect("/urls");
 });
 
@@ -147,7 +149,7 @@ app.post("/login", (req, res) => {
   for (let user in users) {
     if (users[user].email === req.body.email) {
       if (bcrypt.compareSync(req.body.password, users[user].password)) {
-        res.cookie("user_id", users[user].id);
+        req.session("user_id", users[user].id);
         res.redirect("/urls");
         return;
       } else {
@@ -160,7 +162,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session = undefined;
   res.redirect("/urls");
 });
 
