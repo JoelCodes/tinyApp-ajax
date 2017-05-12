@@ -5,25 +5,25 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
-
 // const urlDatabase = {
-//   "b2xVn2" {
-//     user_ID: "userRandomID",
-//     long: "http://www.lighthouselabs.ca"
-//   },
-//   "9sm5xK" {
-//     user_ID: "user2RandomID",
-//     long: "http://www.google.com"
-//   },
-//   "45g7wU" {
-//     user_ID: "user2RandomID",
-//     long: "http://www.cbc.ca"
-//   }
-// }
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
+
+const urlDatabase = {
+  "b2xVn2": {
+    user_id: "userRandomID",
+    long: "http://www.lighthouselabs.ca"
+  },
+  "9sm5xK": {
+    user_id: "user2RandomID",
+    long: "http://www.google.com"
+  },
+  "45g7wU": {
+    user_id: "user2RandomID",
+    long: "http://www.cbc.ca"
+  }
+}
 
 const users = {
   "userRandomID": {
@@ -58,24 +58,24 @@ function generateRandomString() {
 }
 
 app.get("/urls", (req, res) => {
-  let user_ID = req.cookies["user_id"];
+  let user_id = req.cookies["user_id"];
   let templateVars = {
     urls: urlDatabase,
-    user: users[user_ID]
+    user: users[user_id]
   };
   res.render("urls_index", templateVars);
 });
 
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  // urlDatabase[shortURL] = {longURL: req.body.longURL, user_ID: req.cookies["user_id"];
-  urlDatabase[shortURL] = req.body.longURL;
+  urlDatabase[shortURL] = {longURL: req.body.longURL, user_id: req.cookies["user_id"]};
+  // urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
 });
 
 app.get("/urls/new", (req, res) => {
-  let user_ID = req.cookies["user_id"];
-  if (users[user_ID]) {
+  let user_id = req.cookies["user_id"];
+  if (users[user_id]) {
     res.render("urls_new");
   } else {
     res.redirect("/login");
@@ -84,7 +84,9 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   let shortURL = req.params.id;
-  let templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id] };
+  let author_id = urlDatabase[req.params.id].user_id;
+  let author = users[author_id];
+  let templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id].long, author: author};
   res.render("urls_shows", templateVars);
 });
 

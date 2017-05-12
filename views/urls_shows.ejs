@@ -8,6 +8,7 @@
   <body>
     <% include partials/_header.ejs %>
     <a href="/u/<%= shortURL%>">http://tinyapp.com/u/<%= shortURL %></a>
+    <p><%- author.email %></p>
     <form action="/urls/<%= shortURL %>" method="post">
       <p>
         <label for="long-url-input">long URL</label>
