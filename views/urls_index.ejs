@@ -4,6 +4,7 @@
   <head>
     <title>Tiny App</title>
   </head>
+
   <body>
     <% include partials/_header.ejs %>
     <ul>
@@ -12,10 +13,10 @@
         <%= key + ": " + urls[key] %>
         <form action="/urls/<%= key %>/delete" method="POST">
         <a href="/urls/<%= key %>">Edit</a>
-          <button>Delete</button>
+        <button>Delete</button>
         </form>
       </li>
-      <% } %>
+    <% } %>
     </ul>
   </body>
 </html>

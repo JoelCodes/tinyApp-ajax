@@ -10,6 +10,21 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+// const urlDatabase = {
+//   "b2xVn2" {
+//     user_ID: "userRandomID",
+//     long: "http://www.lighthouselabs.ca"
+//   },
+//   "9sm5xK" {
+//     user_ID: "user2RandomID",
+//     long: "http://www.google.com"
+//   },
+//   "45g7wU" {
+//     user_ID: "user2RandomID",
+//     long: "http://www.cbc.ca"
+//   }
+// }
+
 const users = {
   "userRandomID": {
     id: "userRandomID",
@@ -53,12 +68,18 @@ app.get("/urls", (req, res) => {
 
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
+  // urlDatabase[shortURL] = {longURL: req.body.longURL, user_ID: req.cookies["user_id"];
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let user_ID = req.cookies["user_id"];
+  if (users[user_ID]) {
+    res.render("urls_new");
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -89,8 +110,8 @@ app.post("/register", (req, res) => {
   }
   for (let user in users) {
     if (users[user].email === req.body.email) {
-      res.status(400).send("That email is already registered.")
-       // <a href="/login">Login</a> or try registering again <a href="/register">Register</a>" );
+      res.status(400).send("That email is already registered")
+      // , please"<a href="/login">login</a>" or try registering "<a href="/register">again</a>" );
       return;
     }
   }

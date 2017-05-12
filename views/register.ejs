@@ -4,8 +4,10 @@
   <head>
     <title>Tiny App</title>
   </head>
+
   <body>
-  <p>Please register</p>
+    <% include partials/_header.ejs %>
+    <p>Please register</p>
     <form action="/register" method="POST">
       <label for="email">Email</label>
       <input type= "email" name="email">
@@ -14,6 +16,5 @@
       <input type="password" name="password">
       <input type="submit" value="Submit">
     </form>
-
   </body>
 </html>
