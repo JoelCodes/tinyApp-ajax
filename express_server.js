@@ -42,8 +42,6 @@ const users = {
   }
 };
 
-
-
 app.use(function(req, res, next) {
   res.locals.user = users[req.session.user_id];
   next();
@@ -95,10 +93,10 @@ app.post("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   let user_id = req.session["user_id"];
-  if (users[user_id]) {
-    res.render("urls_new");
-  } else {
+  if (!user_id) {
     res.redirect("/login");
+  } else {
+    res.render("urls_new");
   }
 });
 
