@@ -101,9 +101,24 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  let shortURL = req.params.id;
-  let templateVars = {shortURL: req.params.id, longURL: urlDatabase[req.params.id].longURL};
-  res.render("urls_shows", templateVars);
+  let user_id = req.session["user_id"];
+  if (user_id) {
+    if (user_id === urlDatabase[req.params.id].userID) {
+    let shortURL = req.params.id;
+    let templateVars = {shortURL: req.params.id, longURL: urlDatabase[req.params.id].longURL};
+    res.render("urls_shows", templateVars);
+    } else if (user_id !== urlDatabase[req.params.id].userID) {
+    res.status(403).send("You are not allowed to access this page. Return to <a href='/urls'>TinyApp.</a>");
+    return;
+    }
+  } else if (urlDatabase[req.params.id].userID) {
+    res.status(401).send("Please <a href='/login'>login</a> to view this page.");
+    return;
+  }
+  // } else {
+  //   res.status(404).send("Page does not exist.");
+  //   return;
+  // }
 });
 
 app.post("/urls/:id", (req, res) => {
@@ -117,7 +132,12 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
+  let userid = req.session["user_id"];
+  if (userid) {
+    res.redirect("/urls");
+  } else {
   res.render("register");
+  }
 });
 
 app.post("/register", (req, res) => {
@@ -148,7 +168,7 @@ app.get("/login", (req, res) => {
 
 app.post("/login", (req, res) => {
   if (!req.body.email || !req.body.password) {
-    res.status(400).send("Please enter both an email and a password");
+    res.status(400).send("Please enter both an email and a password. Return to <a href='/login'>login</a> page.");
     return;
   }
   for (let user in users) {
@@ -158,12 +178,12 @@ app.post("/login", (req, res) => {
         res.redirect("/urls");
         return;
       } else {
-        res.status(403).send("Incorrect password");
+        res.status(403).send("Incorrect password. Please try <a href='/login'>again</a>.");
         return;
       }
     }
   }
-  res.status(403).send("Email does not exist");
+  res.status(403).send("Email does not exist. Please <a href='/register'>register</a>!");
 });
 
 app.post("/logout", (req, res) => {
@@ -173,6 +193,10 @@ app.post("/logout", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL].longURL;
+  // if (req.params === undefined) {
+  //   res.status(404).send("Page does not exist.");
+  //   return;
+  // }
   res.redirect(longURL);
 });
 
