@@ -71,13 +71,20 @@ function userSpecificURL(user_id) {
 }
 
 app.get("/urls", (req, res) => {
+
   let userid = req.session["user_id"];
   let urls = userSpecificURL(userid);
   let templateVars = {
     urls: urls,
     user: users[userid]
   };
+
+  if (!userid) {
+    res.redirect("/login");
+  } else {
+
   res.render("urls_index", templateVars);
+  }
 });
 
 app.post("/urls", (req, res) => {
