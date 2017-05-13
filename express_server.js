@@ -76,12 +76,10 @@ app.get("/urls", (req, res) => {
     urls: urls,
     user: users[userid]
   };
-
   if (!userid) {
     res.redirect("/login");
   } else {
-
-  res.render("urls_index", templateVars);
+    res.render("urls_index", templateVars);
   }
 });
 
@@ -93,10 +91,11 @@ app.post("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   let user_id = req.session["user_id"];
-  if (!user_id) {
-    res.redirect("/login");
-  } else {
+  if (user_id) {
     res.render("urls_new");
+  } else {
+    res.status(401);
+    res.redirect("/login");
   }
 });
 
@@ -104,12 +103,12 @@ app.get("/urls/:id", (req, res) => {
   let user_id = req.session["user_id"];
   if (user_id) {
     if (user_id === urlDatabase[req.params.id].userID) {
-    let shortURL = req.params.id;
-    let templateVars = {shortURL: req.params.id, longURL: urlDatabase[req.params.id].longURL};
-    res.render("urls_shows", templateVars);
+      let shortURL = req.params.id;
+      let templateVars = {shortURL: req.params.id, longURL: urlDatabase[req.params.id].longURL};
+      res.render("urls_shows", templateVars);
     } else if (user_id !== urlDatabase[req.params.id].userID) {
-    res.status(403).send("You are not allowed to access this page. Return to <a href='/urls'>TinyApp.</a>");
-    return;
+      res.status(403).send("You are not allowed to access this page. Return to <a href='/urls'>TinyApp.</a>");
+      return;
     }
   } else if (urlDatabase[req.params.id].userID) {
     res.status(401).send("Please <a href='/login'>login</a> to view this page.");
@@ -136,14 +135,14 @@ app.get("/register", (req, res) => {
   if (userid) {
     res.redirect("/urls");
   } else {
-  res.render("register");
+    res.render("register");
   }
 });
 
 app.post("/register", (req, res) => {
   if (!req.body.email || !req.body.password) {
     res.status(400);
-    res.send("Please enter both an email and a password");
+    res.send("Please enter both an email and a password. Return to <a href='/register'>registration</a> page.");
     return;
   }
   for (let user in users) {
@@ -163,7 +162,12 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  res.render("login");
+  let userid = req.session["user_id"];
+  if (userid) {
+    res.redirect("/urls");
+  } else {
+    res.render("login");
+  }
 });
 
 app.post("/login", (req, res) => {
