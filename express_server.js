@@ -69,7 +69,6 @@ function userSpecificURL(user_id) {
 }
 
 app.get("/urls", (req, res) => {
-
   let userid = req.session["user_id"];
   let urls = userSpecificURL(userid);
   let templateVars = {
