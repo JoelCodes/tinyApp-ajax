@@ -47,6 +47,17 @@ app.use(function(req, res, next) {
   next();
 });
 
+// Checks database to see if short url is valid
+function checkShortURLValid(shortURL){
+  var flag = false;
+  for (let x in urlDatabase){
+    if (x === shortURL) {
+      flag = true;
+    }
+  }
+  return flag;
+}
+
 function generateRandomString() {
   let shortURL = "";
   let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -100,24 +111,37 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   let user_id = req.session["user_id"];
+  // Checks if user is logged in
   if (user_id) {
-    if (user_id === urlDatabase[req.params.id].userID) {
-      let shortURL = req.params.id;
-      let templateVars = {shortURL: req.params.id, longURL: urlDatabase[req.params.id].longURL};
-      res.render("urls_shows", templateVars);
-    } else if (user_id !== urlDatabase[req.params.id].userID) {
-      res.status(403).send("You are not allowed to access this page. Return to <a href='/urls'>TinyApp.</a>");
+    // Checks if the short id is valid or not
+    var result = checkShortURLValid(req.params.id);
+    if (result) {
+      // Makes sure that the url belongs to the user
+      if (user_id === urlDatabase[req.params.id].userID) {
+        let shortURL = req.params.id;
+        let templateVars = {shortURL: req.params.id, longURL: urlDatabase[req.params.id].longURL};
+        res.render("urls_shows", templateVars);
+      }
+      // If the url does not belong to the user
+      else if (user_id !== urlDatabase[req.params.id].userID) {
+        res.status(403).send("You are not allowed to access this page. Return to <a href='/urls'>TinyApp.</a>");
+        return;
+      }
+    }
+    // If the url does not exist
+    else {
+      res.status(404).send("Short URL does not exist.");
       return;
     }
-  } else if (urlDatabase[req.params.id].userID) {
-    res.status(401).send("Please <a href='/login'>login</a> to view this page.");
+  // If the user is not logged in to the system
+  } else {
+    res.status(401).send("Please <a href='/login'>login</a>.");
     return;
   }
-  // } else {
-  //   res.status(404).send("Page does not exist.");
-  //   return;
-  // }
 });
+
+  // else (urlDatabase[req.params.id].userID) {
+
 
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id].longURL = req.body.newLongURL;
