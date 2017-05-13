@@ -82,7 +82,7 @@ app.get("/urls", (req, res) => {
 
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = {longURL: req.body.longURL, user_id: req.session["user_id"]};
+  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.session["user_id"]};
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -149,7 +149,7 @@ app.post("/login", (req, res) => {
   for (let user in users) {
     if (users[user].email === req.body.email) {
       if (bcrypt.compareSync(req.body.password, users[user].password)) {
-        req.session("user_id", users[user].id);
+        req.session["user_id"] = users[user].id;
         res.redirect("/urls");
         return;
       } else {
