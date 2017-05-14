@@ -73,11 +73,11 @@ function generateRandomString() {
 }
 
 // Checks if user has that specific shortURL
-function userSpecificURL(user_id) {
+function userSpecificURL(userId) {
   let result = {};
   for (let shortURL in urlDatabase) {
     let url = urlDatabase[shortURL];
-    if(user_id === url.userID) {
+    if(userId === url.userID) {
       result[shortURL] = url;
     }
   }
@@ -107,11 +107,11 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  let user_id = req.session["user_id"];
+  let userId = req.session["user_id"];
   // If user is logged in, go to create new url page
-  if (user_id) {
+  if (userId) {
     res.render("urls_new");
-    // If no user is logged in, redirect to login page
+  // If no user is logged in, redirect to login page
   } else {
     res.status(401);
     res.redirect("/login");
@@ -119,25 +119,25 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  let user_id = req.session["user_id"];
+  let userId = req.session["user_id"];
   // Checks if user is logged in
-  if (user_id) {
+  if (userId) {
     // Checks if the short id is valid or not
     let result = checkShortURLValid(req.params.id);
     if (result) {
       // Makes sure that the url belongs to the user
-      if (user_id === urlDatabase[req.params.id].userID) {
+      if (userId === urlDatabase[req.params.id].userID) {
         let shortURL = req.params.id;
         let templateVars = {shortURL: req.params.id, longURL: urlDatabase[req.params.id].longURL};
         res.render("urls_shows", templateVars);
       // If the url does not belong to the user
-      } else if (user_id !== urlDatabase[req.params.id].userID) {
+      } else if (userId !== urlDatabase[req.params.id].userID) {
         res.status(403).send("You are not allowed to access this page. Return to <a href='/urls'>TinyApp.</a>");
         return;
       }
     // If the url does not exist
     } else {
-      res.status(404).send("Short URL does not exist.");
+      res.status(404).send("Short URL does not exist. Return to <a href='/urls'>TinyApp.</a>");
       return;
     }
   // If the user is not logged in to the system
@@ -242,7 +242,7 @@ app.get("/u/:shortURL", (req, res) => {
     res.redirect(longURL);
   // If url is not valid, send error message
   } else {
-    res.status(404).send("Invalid URL.");
+    res.status(404).send("Invalid URL. Return to <a href='/urls'>TinyApp.</a>");
     return;
   }
 });
