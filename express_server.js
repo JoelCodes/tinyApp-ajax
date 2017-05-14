@@ -14,6 +14,7 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000
 }));
 
+// Database for urls
 const urlDatabase = {
   "b2xVn2": {
     userID: "userRandomID",
@@ -29,6 +30,7 @@ const urlDatabase = {
   }
 };
 
+// Database for users
 const users = {
   "userRandomID": {
     id: "userRandomID",
@@ -42,6 +44,7 @@ const users = {
   }
 };
 
+// Sets user as a global variable
 app.use(function(req, res, next) {
   res.locals.user = users[req.session.user_id];
   next();
@@ -58,6 +61,7 @@ function checkShortURLValid(shortURL){
   return flag;
 }
 
+// Generates random string for shortURL and randomID
 function generateRandomString() {
   let shortURL = "";
   let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -68,6 +72,7 @@ function generateRandomString() {
   return shortURL;
 }
 
+// Checks if user has that specific shortURL
 function userSpecificURL(user_id) {
   let result = {};
   for (let shortURL in urlDatabase) {
@@ -86,8 +91,10 @@ app.get("/urls", (req, res) => {
     urls: urls,
     user: users[userid]
   };
+  // If no user is logged in, redirect to login page
   if (!userid) {
     res.redirect("/login");
+  // If user is logged in, go to index page
   } else {
     res.render("urls_index", templateVars);
   }
@@ -101,8 +108,10 @@ app.post("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   let user_id = req.session["user_id"];
+  // If user is logged in, go to create new url page
   if (user_id) {
     res.render("urls_new");
+    // If no user is logged in, redirect to login page
   } else {
     res.status(401);
     res.redirect("/login");
@@ -114,22 +123,20 @@ app.get("/urls/:id", (req, res) => {
   // Checks if user is logged in
   if (user_id) {
     // Checks if the short id is valid or not
-    var result = checkShortURLValid(req.params.id);
+    let result = checkShortURLValid(req.params.id);
     if (result) {
       // Makes sure that the url belongs to the user
       if (user_id === urlDatabase[req.params.id].userID) {
         let shortURL = req.params.id;
         let templateVars = {shortURL: req.params.id, longURL: urlDatabase[req.params.id].longURL};
         res.render("urls_shows", templateVars);
-      }
       // If the url does not belong to the user
-      else if (user_id !== urlDatabase[req.params.id].userID) {
+      } else if (user_id !== urlDatabase[req.params.id].userID) {
         res.status(403).send("You are not allowed to access this page. Return to <a href='/urls'>TinyApp.</a>");
         return;
       }
-    }
     // If the url does not exist
-    else {
+    } else {
       res.status(404).send("Short URL does not exist.");
       return;
     }
@@ -139,9 +146,6 @@ app.get("/urls/:id", (req, res) => {
     return;
   }
 });
-
-  // else (urlDatabase[req.params.id].userID) {
-
 
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id].longURL = req.body.newLongURL;
@@ -155,25 +159,30 @@ app.post("/urls/:id/delete", (req, res) => {
 
 app.get("/register", (req, res) => {
   let userid = req.session["user_id"];
+  // If user is logged in, redirect to main urls page
   if (userid) {
     res.redirect("/urls");
+  // If user is not logged in, go to register page
   } else {
     res.render("register");
   }
 });
 
 app.post("/register", (req, res) => {
+  // If user does not enter both an email and a password
   if (!req.body.email || !req.body.password) {
     res.status(400);
     res.send("Please enter both an email and a password. Return to <a href='/register'>registration</a> page.");
     return;
   }
+  // Checks to see if email is already registered
   for (let user in users) {
     if (users[user].email === req.body.email) {
       res.status(400).send("That email is already registered, please <a href='/login'>login</a> or try registering <a href='/register'>again</a>" );
       return;
     }
   }
+  // Creates randomID for new user then redirects to urls page
   let randomID = generateRandomString();
   users[randomID] = {
     id: randomID,
@@ -186,31 +195,38 @@ app.post("/register", (req, res) => {
 
 app.get("/login", (req, res) => {
   let userid = req.session["user_id"];
+  // If user is logged in, go to urls
   if (userid) {
     res.redirect("/urls");
+    // If user is not logged in, go to login
   } else {
     res.render("login");
   }
 });
 
 app.post("/login", (req, res) => {
+  // If user does not enter both an email and a password
   if (!req.body.email || !req.body.password) {
     res.status(400).send("Please enter both an email and a password. Return to <a href='/login'>login</a> page.");
     return;
   }
+  // Checks if user exists in users database
   for (let user in users) {
     if (users[user].email === req.body.email) {
       if (bcrypt.compareSync(req.body.password, users[user].password)) {
         req.session["user_id"] = users[user].id;
         res.redirect("/urls");
         return;
+        // If user uses incorrect password
       } else {
         res.status(403).send("Incorrect password. Please try <a href='/login'>again</a>.");
         return;
       }
     }
   }
+  // If user uses an email that does not exist
   res.status(403).send("Email does not exist. Please <a href='/register'>register</a>!");
+  return;
 });
 
 app.post("/logout", (req, res) => {
@@ -219,12 +235,16 @@ app.post("/logout", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL].longURL;
-  // if (req.params === undefined) {
-  //   res.status(404).send("Page does not exist.");
-  //   return;
-  // }
-  res.redirect(longURL);
+  let result = checkShortURLValid(req.params.shortURL);
+  // If url is valid, redirect to longURL
+  if (result) {
+    let longURL = urlDatabase[req.params.shortURL].longURL;
+    res.redirect(longURL);
+  // If url is not valid, send error message
+  } else {
+    res.status(404).send("Invalid URL.");
+    return;
+  }
 });
 
 app.listen(PORT, () => {
