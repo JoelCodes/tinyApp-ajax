@@ -5,8 +5,61 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
+  <script
+  src="http://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
 </head>
 <body>
-  
+  <% include partials/_header.ejs %>
+      <h3>My URLs</h3>
+  <ul id='url-list'>
+
+  </ul>
+  <div>
+    <form id='new-url-form' action="/urls" method="POST" style="margin:150px;">
+      <label for="longURL">Enter a URL:</label>
+      <input id="longURL" type="text" name="longURL" placeholder="http://" style="width: 300px">
+      <input type="submit" value="Submit">
+    </form>
+  </div>
+  <script>
+  $(function(){
+    var $urlList = $('#url-list');
+    function getUrls(){
+      $.ajax('/api/urls', {
+        success:function(urls){
+          $urlList.empty();
+          for(var key in urls){
+            var template = "<li>" + key + ": " + urls[key].longURL + "<button>Edit</button>" + "<button data-delete-id='" + key + "'>Delete</button></li>";
+            $urlList.append(template);
+          }
+        }
+      })
+    }
+    getUrls();
+
+    var $newURLForm = $('#new-url-form')
+      .on('submit', function(evt){
+        evt.preventDefault();
+        $.ajax({
+          method: 'POST',
+          url: '/api/urls',
+          data: $newURLForm.serialize(),
+          success: getUrls
+        })
+      });
+    $urlList.on('click', function(event){
+      var $target = $(event.target);
+      if($target.attr('data-delete-id')){
+        $.ajax({
+          method: 'DELETE',
+          url: '/api/urls/' + $target.attr('data-delete-id'),
+          success: getUrls
+        })
+      }
+    });
+  });
+  </script>
 </body>
 </html>
