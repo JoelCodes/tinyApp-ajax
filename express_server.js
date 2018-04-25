@@ -15,21 +15,6 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000,
 }));
 
-// Database for urls
-const urlDatabase = {
-  b2xVn2: {
-    userID: 'userRandomID',
-    longURL: 'http://www.lighthouselabs.ca',
-  },
-  '9sm5xK': {
-    userID: 'user2RandomID',
-    longURL: 'http://www.google.com',
-  },
-  '45g7wU': {
-    userID: 'user2RandomID',
-    longURL: 'http://www.cbc.ca',
-  },
-};
 
 // Database for users
 const users = {
@@ -65,9 +50,8 @@ function generateRandomString() {
 
 
 app.get('/register', (req, res) => {
-  const userid = req.session.user_id;
   // If user is logged in, redirect to main urls page
-  if (userid) {
+  if (res.locals.user) {
     res.redirect('/urls');
   // If user is not logged in, go to register page
   } else {
@@ -100,9 +84,8 @@ app.post('/register', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  const userid = req.session.user_id;
   // If user is logged in, go to urls
-  if (userid) {
+  if (res.locals.user) {
     res.redirect('/urls');
     // If user is not logged in, go to login
   } else {
@@ -134,12 +117,14 @@ app.post('/logout', (req, res) => {
   res.redirect('/login');
 });
 
+// Database for urls
+const urlDatabase = {};
+
 app.get('/u/:shortURL', (req, res) => {
   const result = urlDatabase[req.params.shortURL];
   // If url is valid, redirect to longURL
   if (result) {
-    const longURL = urlDatabase[req.params.shortURL].longURL;
-    res.redirect(longURL);
+    res.redirect(result.longURL);
   // If url is not valid, send error message
   } else {
     res.status(404).send("Invalid URL. Return to <a href='/urls'>TinyApp.</a>");
@@ -155,74 +140,66 @@ function userSpecificURL(userId) {
 }
 
 app.get('/urls', (req, res) => {
-  const userid = req.session.user_id;
-  const urls = userSpecificURL(userid);
-  const templateVars = {
-    urls,
-    user: users[userid],
-  };
-  // If no user is logged in, redirect to login page
-  if (!userid) {
+  if (!res.locals.user) {
     res.redirect('/login');
-  // If user is logged in, go to index page
   } else {
-    res.render('urls_index', templateVars);
+    res.render('urls_ajax');
   }
 });
 
-app.post('/urls', (req, res) => {
+const apiRouter = new express.Router();
+apiRouter.use((req, res, next) => {
+  if (!res.locals.user) {
+    res.sendStatus(401);
+  } else {
+    next();
+  }
+});
+
+apiRouter.get('/urls', (req, res) => {
+  res.json(userSpecificURL(res.locals.user.id));
+});
+
+apiRouter.post('/urls', (req, res) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.session.user_id };
-  res.redirect(`/urls/${shortURL}`);
+  const newObject = {
+    shortURL,
+    longURL: req.body.longURL,
+    userID: req.session.user_id };
+
+  urlDatabase[shortURL] = newObject;
+
+  res.status(201).json(newObject);
 });
 
-app.get('/urls/new', (req, res) => {
-  const userId = req.session.user_id;
-  // If user is logged in, go to create new url page
-  if (userId) {
-    res.render('urls_new');
-  // If no user is logged in, redirect to login page
+apiRouter.use('/urls/:id', (req, res, next) => {
+  const url = urlDatabase[req.params.id];
+  if (!url) {
+    res.sendStatus(404);
+  } else if (url.userID !== res.locals.user.id) {
+    res.sendStatus(403);
   } else {
-    res.status(401);
-    res.redirect('/login');
+    res.locals.url = url;
+    next();
   }
 });
 
-app.get('/urls/:id', (req, res) => {
-  const userId = req.session.user_id;
-  // Checks if user is logged in
-  if (userId) {
-    // Checks if the short id is valid or not
-    const result = urlDatabase[req.params.id];
-    if (result) {
-      // Makes sure that the url belongs to the user
-      if (userId === urlDatabase[req.params.id].userID) {
-        const shortURL = req.params.id;
-        const templateVars = { shortURL, longURL: result.longURL };
-        res.render('urls_shows', templateVars);
-      // If the url does not belong to the user
-      } else if (userId !== urlDatabase[req.params.id].userID) {
-        res.status(403).send("You are not allowed to access this page. Return to <a href='/urls'>TinyApp.</a>");
-      }
-    // If the url does not exist
-    } else {
-      res.status(404).send("Short URL does not exist. Return to <a href='/urls'>TinyApp.</a>");
+apiRouter.route('/urls/:id')
+  .get((req, res) => {
+    res.json(res.locals.url);
+  })
+  .put((req, res) => {
+    if (!req.body.longURL) {
+      res.sendStatus(400);
     }
-  // If the user is not logged in to the system
-  } else {
-    res.status(401).send("Please <a href='/login'>login</a>.");
-  }
-});
-
-app.post('/urls/:id', (req, res) => {
-  urlDatabase[req.params.id].longURL = req.body.newLongURL;
-  res.redirect('/urls');
-});
-
-app.post('/urls/:id/delete', (req, res) => {
-  delete urlDatabase[req.params.id];
-  res.redirect('/urls');
-});
+    res.locals.url.longURL = req.body.longURL;
+    res.json(res.locals.url);
+  })
+  .delete((req, res) => {
+    delete urlDatabase[req.params.id];
+    res.sendStatus(200);
+  });
+app.use('/api', apiRouter);
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
